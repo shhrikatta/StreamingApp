@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "streamingapp.labels" . | nindent 4 }}
+    app.kubernetes.io/name: streaming
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "streamingapp.selectorLabels" (dict "component" "streaming" "Release" .Release) | nindent 4 }}
+  ports:
+    - port: {{ .Values.streaming.port }}
+      targetPort: {{ .Values.streaming.port }}
+      protocol: TCP
+      name: http

@@ -1,0 +1,124 @@
+global:
+  namespace: streamingapp
+
+# -- Shared secrets (override via --set or values-override.yaml)
+secrets:
+  jwtSecret: changeme
+  awsAccessKeyId: ""
+  awsSecretAccessKey: ""
+
+# -- Shared config
+config:
+  mongoUri: "mongodb://mongo:27017/streamingapp"
+  clientUrls: "http://localhost:3000"
+  awsRegion: "us-east-1"
+  awsS3Bucket: ""
+  awsCdnUrl: ""
+
+# -- MongoDB
+mongo:
+  image:
+    repository: mongo
+    tag: "6"
+  storage:
+    size: 10Gi
+    storageClass: gp2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# -- Auth Service
+auth:
+  replicaCount: 2
+  image:
+    repository: "" # e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com/streamingapp-auth
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 3001
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+# -- Streaming Service
+streaming:
+  replicaCount: 2
+  image:
+    repository: "" # e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com/streamingapp-streaming
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 3002
+  streamingPublicUrl: ""
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# -- Admin Service
+admin:
+  replicaCount: 1
+  image:
+    repository: "" # e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com/streamingapp-admin
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 3003
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+# -- Chat Service
+chat:
+  replicaCount: 2
+  image:
+    repository: "" # e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com/streamingapp-chat
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 3004
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+# -- Frontend
+frontend:
+  replicaCount: 2
+  image:
+    repository: "" # e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com/streamingapp-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# -- Ingress (AWS ALB)
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /
+  host: ""

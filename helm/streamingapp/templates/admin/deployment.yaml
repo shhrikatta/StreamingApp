@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "streamingapp.labels" . | nindent 4 }}
+    app.kubernetes.io/name: admin
+spec:
+  replicas: {{ .Values.admin.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "streamingapp.selectorLabels" (dict "component" "admin" "Release" .Release) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "streamingapp.selectorLabels" (dict "component" "admin" "Release" .Release) | nindent 8 }}
+    spec:
+      containers:
+        - name: admin
+          image: "{{ .Values.admin.image.repository }}:{{ .Values.admin.image.tag }}"
+          imagePullPolicy: {{ .Values.admin.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.admin.port }}
+          env:
+            - name: PORT
+              value: {{ .Values.admin.port | quote }}
+            - name: NODE_ENV
+              value: production
+          envFrom:
+            - configMapRef:
+                name: streamingapp-config
+            - secretRef:
+                name: streamingapp-secrets
+          resources:
+            {{- toYaml .Values.admin.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.admin.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.admin.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20

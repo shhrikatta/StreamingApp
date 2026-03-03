@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "streamingapp.labels" . | nindent 4 }}
+    app.kubernetes.io/name: streaming
+spec:
+  replicas: {{ .Values.streaming.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "streamingapp.selectorLabels" (dict "component" "streaming" "Release" .Release) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "streamingapp.selectorLabels" (dict "component" "streaming" "Release" .Release) | nindent 8 }}
+    spec:
+      containers:
+        - name: streaming
+          image: "{{ .Values.streaming.image.repository }}:{{ .Values.streaming.image.tag }}"
+          imagePullPolicy: {{ .Values.streaming.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.streaming.port }}
+          env:
+            - name: PORT
+              value: {{ .Values.streaming.port | quote }}
+            - name: NODE_ENV
+              value: production
+            - name: STREAMING_PUBLIC_URL
+              value: {{ .Values.streaming.streamingPublicUrl | quote }}
+          envFrom:
+            - configMapRef:
+                name: streamingapp-config
+            - secretRef:
+                name: streamingapp-secrets
+          resources:
+            {{- toYaml .Values.streaming.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.streaming.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.streaming.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20

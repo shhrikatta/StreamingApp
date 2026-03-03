@@ -1,0 +1,89 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: streamingapp-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "streamingapp.labels" . | nindent 4 }}
+  annotations:
+    {{- range $key, $value := .Values.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - {{- if .Values.ingress.host }}
+      host: {{ .Values.ingress.host }}
+      {{- end }}
+      http:
+        paths:
+          # Auth service — /api (excluding /api/streaming, /api/admin, /api/chat)
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth
+                port:
+                  number: {{ .Values.auth.port }}
+          - path: /api/register
+            pathType: Prefix
+            backend:
+              service:
+                name: auth
+                port:
+                  number: {{ .Values.auth.port }}
+          - path: /api/login
+            pathType: Prefix
+            backend:
+              service:
+                name: auth
+                port:
+                  number: {{ .Values.auth.port }}
+          - path: /api/verify
+            pathType: Prefix
+            backend:
+              service:
+                name: auth
+                port:
+                  number: {{ .Values.auth.port }}
+          - path: /api/health
+            pathType: Prefix
+            backend:
+              service:
+                name: auth
+                port:
+                  number: {{ .Values.auth.port }}
+          # Streaming service
+          - path: /api/streaming
+            pathType: Prefix
+            backend:
+              service:
+                name: streaming
+                port:
+                  number: {{ .Values.streaming.port }}
+          # Admin service
+          - path: /api/admin
+            pathType: Prefix
+            backend:
+              service:
+                name: admin
+                port:
+                  number: {{ .Values.admin.port }}
+          # Chat service
+          - path: /api/chat
+            pathType: Prefix
+            backend:
+              service:
+                name: chat
+                port:
+                  number: {{ .Values.chat.port }}
+          # Frontend — catch-all
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+{{- end }}
